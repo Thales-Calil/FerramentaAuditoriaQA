@@ -32,7 +32,8 @@ public class HelloApplication extends Application {
         ChecklistView checklistView = new ChecklistView(); // <-- NOVA VIEW
 
         // 2. Instanciar o Controller e passar as referências do Model e da View
-        AuditoriaController controller = new AuditoriaController(model, auditoriaView);
+        AuditoriaController controller = new AuditoriaController(model, auditoriaView, acompanhamentoView);
+
 
         // 3. Criar a coluna de ações para a tabela de acompanhamento
         TableColumn<NaoConformidade, Void> colunaAcoes = new TableColumn<>("Ações");
