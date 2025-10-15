@@ -4,7 +4,7 @@ import com.ferramenta.ferramentaAuditoria.model.AuditoriaData;
 import com.ferramenta.ferramentaAuditoria.model.NaoConformidade;
 import com.ferramenta.ferramentaAuditoria.model.Checklist;
 import com.ferramenta.ferramentaAuditoria.view.AuditoriaView;
-import javafx.scene.control.Alert;
+import com.ferramenta.ferramentaAuditoria.util.AlertUtils;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -47,13 +47,13 @@ public class AuditoriaController {
         List<ToggleGroup> grupos = auditoriaView.gruposRespostas;
 
         if (auditor.isEmpty() || responsavel.isEmpty()) {
-            showAlert("Campos obrigatórios", "Por favor, preencha o nome do Auditor e do Responsável.");
+            AlertUtils.getInstance().mostrarErro("Campos obrigatórios", "Por favor, preencha o nome do Auditor e do Responsável.");
             return;
         }
 
         Checklist checklistSelecionado = auditoriaView.checklistComboBox.getSelectionModel().getSelectedItem();
         if (checklistSelecionado == null) {
-            showAlert("Erro", "Selecione um checklist válido.");
+            AlertUtils.getInstance().mostrarErro("Erro", "Selecione um checklist válido.");
             return;
         }
         List<String> perguntas = checklistSelecionado.getPerguntas();
@@ -74,7 +74,7 @@ public class AuditoriaController {
                     try {
                         model.salvarNCemCSV(novaNC);
                     } catch (IOException ex) {
-                        showAlert("Erro", "Falha ao salvar NC: " + ex.getMessage());
+                        AlertUtils.getInstance().mostrarErro("Erro", "Falha ao salvar NC: " + ex.getMessage());
                     }
                 } else {
                     conformidades++;
@@ -89,10 +89,10 @@ public class AuditoriaController {
             String dataHora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
             model.salvarEmCSV(dataHora, auditor, responsavel, "Respostas aqui...", naoConformidades.size());
         } catch (IOException ex) {
-            showAlert("Erro", "Falha ao salvar dados: " + ex.getMessage());
+            AlertUtils.getInstance().mostrarErro("Erro", "Falha ao salvar dados: " + ex.getMessage());
         }
 
-        showAlert("Sucesso!", "Auditoria registrada com sucesso.");
+        AlertUtils.getInstance().mostrarInfo("Sucesso!", "Auditoria registrada com sucesso.");
     }
 
     // ===============================
@@ -100,12 +100,12 @@ public class AuditoriaController {
     // ===============================
     public void escalonarNC(NaoConformidade nc) {
         nc.setSituacao("Escalonada");
-        try { model.salvarTodasNCs(); } catch (IOException e) { showAlert("Erro", "Falha ao atualizar NCs."); }
+        try { model.salvarTodasNCs(); } catch (IOException e) { AlertUtils.getInstance().mostrarInfo("Erro", "Falha ao atualizar NCs."); }
     }
 
     public void resolverNC(NaoConformidade nc) {
         nc.setSituacao("Resolvida");
-        try { model.salvarTodasNCs(); } catch (IOException e) { showAlert("Erro", "Falha ao atualizar NCs."); }
+        try { model.salvarTodasNCs(); } catch (IOException e) { AlertUtils.getInstance().mostrarInfo("Erro", "Falha ao atualizar NCs."); }
     }
 
     public void notificarNC(NaoConformidade nc) { exibirPopUpEmail(nc); }
@@ -140,7 +140,7 @@ public class AuditoriaController {
         Button enviarButton = new Button("Enviar E-mail");
         enviarButton.setOnAction(e -> {
             if (emailField.getText().trim().isEmpty()) {
-                showAlert("Atenção", "Por favor, insira o e-mail do responsável.");
+                AlertUtils.getInstance().mostrarInfo("Atenção", "Por favor, insira o e-mail do responsável.");
                 return;
             }
             abrirClienteEmail(emailField.getText(), assunto, corpo);
@@ -165,21 +165,10 @@ public class AuditoriaController {
             if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.MAIL)) {
                 Desktop.getDesktop().mail(new URI(mailtoLink));
             } else {
-                showAlert("Atenção", "Nenhum cliente de e-mail padrão foi encontrado.");
+                AlertUtils.getInstance().mostrarErro("Atenção", "Nenhum cliente de e-mail padrão foi encontrado.");
             }
         } catch (Exception e) {
-            showAlert("Erro", "Não foi possível abrir o cliente de e-mail.");
+            AlertUtils.getInstance().mostrarErro("Erro", "Não foi possível abrir o cliente de e-mail.");
         }
-    }
-
-    // ===============================
-    // ALERTS
-    // ===============================
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
     }
 }
