@@ -5,6 +5,7 @@ import com.ferramenta.ferramentaAuditoria.controller.AuditoriaController;
 import com.ferramenta.ferramentaAuditoria.model.NaoConformidade;
 import com.ferramenta.ferramentaAuditoria.view.AuditoriaView;
 import com.ferramenta.ferramentaAuditoria.view.AcompanhamentoView;
+import com.ferramenta.ferramentaAuditoria.view.ChecklistView;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -28,6 +29,7 @@ public class HelloApplication extends Application {
         AuditoriaData model = new AuditoriaData();
         AuditoriaView auditoriaView = new AuditoriaView();
         AcompanhamentoView acompanhamentoView = new AcompanhamentoView(model.getListaNaoConformidades());
+        ChecklistView checklistView = new ChecklistView(); // <-- NOVA VIEW
 
         // 2. Instanciar o Controller e passar as referências do Model e da View
         AuditoriaController controller = new AuditoriaController(model, auditoriaView);
@@ -35,7 +37,7 @@ public class HelloApplication extends Application {
         // 3. Criar a coluna de ações para a tabela de acompanhamento
         TableColumn<NaoConformidade, Void> colunaAcoes = new TableColumn<>("Ações");
 
-        colunaAcoes.setCellFactory(new Callback<TableColumn<NaoConformidade, Void>, TableCell<NaoConformidade, Void>>() {
+        colunaAcoes.setCellFactory(new Callback<>() {
             @Override
             public TableCell<NaoConformidade, Void> call(TableColumn<NaoConformidade, Void> param) {
                 return new TableCell<>() {
@@ -82,10 +84,14 @@ public class HelloApplication extends Application {
         TabPane tabPane = new TabPane();
         Tab tabAuditoria = new Tab("Registrar Auditoria", auditoriaView.criarTabAuditoria());
         Tab tabAcompanhamento = new Tab("Acompanhamento de NCs", acompanhamentoView.getView());
+        Tab tabChecklist = new Tab("Gerenciar Checklist", checklistView.getView()); // <-- NOVA ABA
+
+        // Impedir fechamento das abas
         tabAuditoria.setClosable(false);
         tabAcompanhamento.setClosable(false);
+        tabChecklist.setClosable(false);
 
-        tabPane.getTabs().addAll(tabAuditoria, tabAcompanhamento);
+        tabPane.getTabs().addAll(tabAuditoria, tabAcompanhamento, tabChecklist);
 
         Scene scene = new Scene(tabPane, 650, 500);
         primaryStage.setScene(scene);

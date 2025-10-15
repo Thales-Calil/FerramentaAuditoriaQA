@@ -18,4 +18,5 @@ public class NaoConformidade {
     public String getNc() { return nc; }
     public String getSituacao() { return situacao; }
     public void setSituacao(String situacao) { this.situacao = situacao; }
+    public void setNc(String nc) { this.nc = nc; }
 }

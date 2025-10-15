@@ -2,18 +2,19 @@ package com.ferramenta.ferramentaAuditoria.controller;
 
 import com.ferramenta.ferramentaAuditoria.model.AuditoriaData;
 import com.ferramenta.ferramentaAuditoria.model.NaoConformidade;
+import com.ferramenta.ferramentaAuditoria.model.Checklist;
 import com.ferramenta.ferramentaAuditoria.view.AuditoriaView;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextArea;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.layout.VBox;
-import javafx.geometry.Insets;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.Button;
+
 import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
@@ -23,7 +24,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Arrays;
 
 public class AuditoriaController {
 
@@ -34,26 +34,29 @@ public class AuditoriaController {
         this.model = model;
         this.auditoriaView = auditoriaView;
 
-        // Conectar o botão de registrar da View ao Controller
-        auditoriaView.registrarButton.setOnAction(e -> {
-            processarAuditoria();
-        });
+        // Conecta o botão de registrar auditoria ao processamento
+        auditoriaView.registrarButton.setOnAction(e -> processarAuditoria());
     }
 
+    // ===============================
+    // PROCESSAMENTO DA AUDITORIA
+    // ===============================
     public void processarAuditoria() {
-        String auditor = auditoriaView.auditorField.getText();
-        String responsavel = auditoriaView.responsavelField.getText();
-        List<String> perguntas = Arrays.asList(
-                "1. O bibliotecário verificou se o estudante está inelegível?",
-                "2. O bibliotecário solicitou a carteirinha?",
-                "3. O bibliotecário informou sobre o prazo de devolução?"
-        );
+        String auditor = auditoriaView.auditorField.getText().trim();
+        String responsavel = auditoriaView.responsavelField.getText().trim();
         List<ToggleGroup> grupos = auditoriaView.gruposRespostas;
 
-        if (auditor.trim().isEmpty() || responsavel.trim().isEmpty()) {
+        if (auditor.isEmpty() || responsavel.isEmpty()) {
             showAlert("Campos obrigatórios", "Por favor, preencha o nome do Auditor e do Responsável.");
             return;
         }
+
+        Checklist checklistSelecionado = auditoriaView.checklistComboBox.getSelectionModel().getSelectedItem();
+        if (checklistSelecionado == null) {
+            showAlert("Erro", "Selecione um checklist válido.");
+            return;
+        }
+        List<String> perguntas = checklistSelecionado.getPerguntas();
 
         int totalValidos = 0;
         int conformidades = 0;
@@ -64,7 +67,15 @@ public class AuditoriaController {
             if (!resposta.equals("Não se Aplica")) {
                 totalValidos++;
                 if (resposta.equals("Não")) {
-                    naoConformidades.add(perguntas.get(i));
+                    String perguntaNC = perguntas.get(i);
+                    naoConformidades.add(perguntaNC);
+
+                    NaoConformidade novaNC = new NaoConformidade(auditor, responsavel, perguntaNC, "Pendente");
+                    try {
+                        model.salvarNCemCSV(novaNC);
+                    } catch (IOException ex) {
+                        showAlert("Erro", "Falha ao salvar NC: " + ex.getMessage());
+                    }
                 } else {
                     conformidades++;
                 }
@@ -77,53 +88,41 @@ public class AuditoriaController {
         try {
             String dataHora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
             model.salvarEmCSV(dataHora, auditor, responsavel, "Respostas aqui...", naoConformidades.size());
-
-            for (String nc : naoConformidades) {
-                NaoConformidade novaNC = new NaoConformidade(auditor, responsavel, nc, "Pendente");
-                model.salvarNCemCSV(novaNC);
-            }
-            showAlert("Sucesso!", "Auditoria registrada com sucesso.");
         } catch (IOException ex) {
             showAlert("Erro", "Falha ao salvar dados: " + ex.getMessage());
         }
+
+        showAlert("Sucesso!", "Auditoria registrada com sucesso.");
     }
 
+    // ===============================
+    // AÇÕES SOBRE NCs
+    // ===============================
     public void escalonarNC(NaoConformidade nc) {
         nc.setSituacao("Escalonada");
-        try {
-            model.salvarTodasNCs();
-        } catch (IOException e) {
-            showAlert("Erro", "Falha ao atualizar o arquivo de NCs.");
-        }
+        try { model.salvarTodasNCs(); } catch (IOException e) { showAlert("Erro", "Falha ao atualizar NCs."); }
     }
 
     public void resolverNC(NaoConformidade nc) {
         nc.setSituacao("Resolvida");
-        try {
-            model.salvarTodasNCs();
-        } catch (IOException e) {
-            showAlert("Erro", "Falha ao atualizar o arquivo de NCs.");
-        }
+        try { model.salvarTodasNCs(); } catch (IOException e) { showAlert("Erro", "Falha ao atualizar NCs."); }
     }
 
-    public void notificarNC(NaoConformidade nc) {
-        exibirPopUpEmail(nc);
-    }
+    public void notificarNC(NaoConformidade nc) { exibirPopUpEmail(nc); }
 
+    // ===============================
+    // POP-UP DE EMAIL
+    // ===============================
     private void exibirPopUpEmail(NaoConformidade nc) {
         Stage popUpStage = new Stage();
-        popUpStage.initModality(Modality.APPLICATION_MODAL);
-        popUpStage.setTitle("Notificar Responsável por E-mail");
-
         VBox root = new VBox(10);
-        root.setPadding(new Insets(20));
+        root.setPadding(new javafx.geometry.Insets(20));
 
         Label titulo = new Label("Detalhes do E-mail");
         titulo.setStyle("-fx-font-weight: bold;");
-
+        Label emailLabel = new Label("E-mail:");
         TextField emailField = new TextField();
-        emailField.setPromptText("E-mail do Responsável");
-
+        Label corpoLabel = new Label("Corpo da Mensagem:");
         TextArea corpoEmail = new TextArea();
         corpoEmail.setWrapText(true);
         corpoEmail.setEditable(false);
@@ -136,7 +135,6 @@ public class AuditoriaController {
                 + "Situação: " + nc.getSituacao() + "\n\n"
                 + "Por favor, tome as devidas ações para a resolução.\n\n"
                 + "Atenciosamente,\nEquipe de Auditoria";
-
         corpoEmail.setText(corpo);
 
         Button enviarButton = new Button("Enviar E-mail");
@@ -149,10 +147,11 @@ public class AuditoriaController {
             popUpStage.close();
         });
 
-        root.getChildren().addAll(titulo, new Label("E-mail:"), emailField, new Label("Corpo da Mensagem:"), corpoEmail, enviarButton);
+        root.getChildren().addAll(titulo, emailLabel, emailField, corpoLabel, corpoEmail, enviarButton);
 
-        Scene scene = new Scene(root, 400, 450);
-        popUpStage.setScene(scene);
+        popUpStage.initModality(Modality.APPLICATION_MODAL);
+        popUpStage.setTitle("Notificar Responsável por E-mail");
+        popUpStage.setScene(new Scene(root, 400, 450));
         popUpStage.showAndWait();
     }
 
@@ -173,6 +172,9 @@ public class AuditoriaController {
         }
     }
 
+    // ===============================
+    // ALERTS
+    // ===============================
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);

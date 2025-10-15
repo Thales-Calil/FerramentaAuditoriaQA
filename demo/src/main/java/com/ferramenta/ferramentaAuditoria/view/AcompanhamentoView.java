@@ -29,10 +29,7 @@ public class AcompanhamentoView {
         TableColumn<NaoConformidade, String> situacaoCol = new TableColumn<>("Situação da NC");
         situacaoCol.setCellValueFactory(new PropertyValueFactory<>("situacao"));
 
-        TableColumn<NaoConformidade, Void> acoesCol = new TableColumn<>("Ações");
-        acoesCol.setPrefWidth(300);
-
-        this.tabelaNCs.getColumns().addAll(auditorCol, responsavelCol, ncCol, situacaoCol, acoesCol);
+        this.tabelaNCs.getColumns().addAll(auditorCol, responsavelCol, ncCol, situacaoCol);
     }
 
     public VBox getView() {
