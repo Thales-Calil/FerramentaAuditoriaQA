@@ -1,5 +1,4 @@
-// src/main/java/com/example/demo/view/AuditoriaView.java
-package com.example.demo.view;
+package com.ferramenta.ferramentaAuditoria.view;
 
 import javafx.geometry.Insets;
 import javafx.scene.control.*;

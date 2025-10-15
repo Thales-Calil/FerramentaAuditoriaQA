@@ -1,7 +1,6 @@
-// src/main/java/com/example/demo/view/AcompanhamentoView.java
-package com.example.demo.view;
+package com.ferramenta.ferramentaAuditoria.view;
 
-import com.example.demo.model.NaoConformidade;
+import com.ferramenta.ferramentaAuditoria.model.NaoConformidade;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;

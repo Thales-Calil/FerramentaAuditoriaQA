@@ -1,5 +1,4 @@
-
-package com.example.demo.model;
+package com.ferramenta.ferramentaAuditoria.model;
 
 public class NaoConformidade {
     private String auditor;

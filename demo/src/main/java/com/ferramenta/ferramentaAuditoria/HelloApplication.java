@@ -1,10 +1,10 @@
-package com.example.demo;
+package com.ferramenta.ferramentaAuditoria;
 
-import com.example.demo.model.AuditoriaData;
-import com.example.demo.controller.AuditoriaController;
-import com.example.demo.model.NaoConformidade;
-import com.example.demo.view.AuditoriaView;
-import com.example.demo.view.AcompanhamentoView;
+import com.ferramenta.ferramentaAuditoria.model.AuditoriaData;
+import com.ferramenta.ferramentaAuditoria.controller.AuditoriaController;
+import com.ferramenta.ferramentaAuditoria.model.NaoConformidade;
+import com.ferramenta.ferramentaAuditoria.view.AuditoriaView;
+import com.ferramenta.ferramentaAuditoria.view.AcompanhamentoView;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;

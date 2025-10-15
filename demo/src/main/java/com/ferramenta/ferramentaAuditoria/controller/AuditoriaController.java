@@ -1,8 +1,8 @@
-package com.example.demo.controller;
+package com.ferramenta.ferramentaAuditoria.controller;
 
-import com.example.demo.model.AuditoriaData;
-import com.example.demo.model.NaoConformidade;
-import com.example.demo.view.AuditoriaView;
+import com.ferramenta.ferramentaAuditoria.model.AuditoriaData;
+import com.ferramenta.ferramentaAuditoria.model.NaoConformidade;
+import com.ferramenta.ferramentaAuditoria.view.AuditoriaView;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.TextField;

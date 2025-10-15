@@ -1,5 +1,4 @@
-// src/main/java/com/example/demo/model/AuditoriaData.java
-package com.example.demo.model;
+package com.ferramenta.ferramentaAuditoria.model;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

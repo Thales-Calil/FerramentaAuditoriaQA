@@ -1,15 +1,12 @@
-module com.example.demo {
+module com.ferramenta.ferramentaAuditoria {
     requires javafx.controls;
-    requires javafx.fxml;
     requires java.desktop;
 
-    opens com.example.demo to javafx.fxml;
-    opens com.example.demo.view to javafx.fxml;
+    opens com.ferramenta.ferramentaAuditoria to javafx.graphics;
+    opens com.ferramenta.ferramentaAuditoria.model to javafx.base;
 
-    exports com.example.demo;
-    exports com.example.demo.controller;
-    exports com.example.demo.model;
-    exports com.example.demo.view;
-
-    opens com.example.demo.model to javafx.base;
+    exports com.ferramenta.ferramentaAuditoria;
+    exports com.ferramenta.ferramentaAuditoria.controller;
+    exports com.ferramenta.ferramentaAuditoria.model;
+    exports com.ferramenta.ferramentaAuditoria.view;
 }
