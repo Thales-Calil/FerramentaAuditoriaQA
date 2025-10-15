@@ -5,6 +5,8 @@ import com.ferramenta.ferramentaAuditoria.model.NaoConformidade;
 import com.ferramenta.ferramentaAuditoria.model.Checklist;
 import com.ferramenta.ferramentaAuditoria.view.AuditoriaView;
 import com.ferramenta.ferramentaAuditoria.util.AlertUtils;
+import com.ferramenta.ferramentaAuditoria.facade.AuditoriaFacade;
+
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -20,8 +22,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +39,7 @@ public class AuditoriaController {
     }
 
     // ===============================
-    // PROCESSAMENTO DA AUDITORIA
+    // Processamento da auditoria usando facade
     // ===============================
     public void processarAuditoria() {
         String auditor = auditoriaView.auditorField.getText().trim();
@@ -56,42 +56,23 @@ public class AuditoriaController {
             AlertUtils.getInstance().mostrarErro("Erro", "Selecione um checklist válido.");
             return;
         }
-        List<String> perguntas = checklistSelecionado.getPerguntas();
 
-        int totalValidos = 0;
-        int conformidades = 0;
-        List<String> naoConformidades = new ArrayList<>();
-
-        for (int i = 0; i < grupos.size(); i++) {
-            String resposta = grupos.get(i).getSelectedToggle().getUserData().toString();
-            if (!resposta.equals("Não se Aplica")) {
-                totalValidos++;
-                if (resposta.equals("Não")) {
-                    String perguntaNC = perguntas.get(i);
-                    naoConformidades.add(perguntaNC);
-
-                    NaoConformidade novaNC = new NaoConformidade(auditor, responsavel, perguntaNC, "Pendente");
-                    try {
-                        model.salvarNCemCSV(novaNC);
-                    } catch (IOException ex) {
-                        AlertUtils.getInstance().mostrarErro("Erro", "Falha ao salvar NC: " + ex.getMessage());
-                    }
-                } else {
-                    conformidades++;
-                }
+        // Coleta as respostas marcadas
+        List<String> respostas = new ArrayList<>();
+        for (ToggleGroup grupo : grupos) {
+            if (grupo.getSelectedToggle() != null) {
+                respostas.add(grupo.getSelectedToggle().getUserData().toString());
+            } else {
+                respostas.add("Não se Aplica"); // Evita erro se o usuário não marcar algo
             }
         }
 
-        double porcentagemAderencia = (totalValidos > 0) ? (double) conformidades / totalValidos * 100 : 0;
-        auditoriaView.aderenciaLabel.setText(String.format("Aderência: %.2f%%", porcentagemAderencia));
+        // Usa o padrão Facade para processar toda a lógica
+        AuditoriaFacade facade = new AuditoriaFacade(model);
+        double aderencia = facade.registrarAuditoria(auditor, responsavel, checklistSelecionado, respostas);
 
-        try {
-            String dataHora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-            model.salvarEmCSV(dataHora, auditor, responsavel, "Respostas aqui...", naoConformidades.size());
-        } catch (IOException ex) {
-            AlertUtils.getInstance().mostrarErro("Erro", "Falha ao salvar dados: " + ex.getMessage());
-        }
-
+        // Atualiza a tela
+        auditoriaView.aderenciaLabel.setText(String.format("Aderência: %.2f%%", aderencia));
         AlertUtils.getInstance().mostrarInfo("Sucesso!", "Auditoria registrada com sucesso.");
     }
 
@@ -100,15 +81,25 @@ public class AuditoriaController {
     // ===============================
     public void escalonarNC(NaoConformidade nc) {
         nc.setSituacao("Escalonada");
-        try { model.salvarTodasNCs(); } catch (IOException e) { AlertUtils.getInstance().mostrarInfo("Erro", "Falha ao atualizar NCs."); }
+        try {
+            model.salvarTodasNCs();
+        } catch (IOException e) {
+            AlertUtils.getInstance().mostrarInfo("Erro", "Falha ao atualizar NCs.");
+        }
     }
 
     public void resolverNC(NaoConformidade nc) {
         nc.setSituacao("Resolvida");
-        try { model.salvarTodasNCs(); } catch (IOException e) { AlertUtils.getInstance().mostrarInfo("Erro", "Falha ao atualizar NCs."); }
+        try {
+            model.salvarTodasNCs();
+        } catch (IOException e) {
+            AlertUtils.getInstance().mostrarInfo("Erro", "Falha ao atualizar NCs.");
+        }
     }
 
-    public void notificarNC(NaoConformidade nc) { exibirPopUpEmail(nc); }
+    public void notificarNC(NaoConformidade nc) {
+        exibirPopUpEmail(nc);
+    }
 
     // ===============================
     // POP-UP DE EMAIL
