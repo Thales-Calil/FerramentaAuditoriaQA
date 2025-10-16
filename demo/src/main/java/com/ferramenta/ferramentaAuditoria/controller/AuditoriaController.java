@@ -174,18 +174,18 @@ public class AuditoriaController {
 
     private void abrirClienteEmail(String para, String assunto, String corpo) {
         try {
-            String mailtoLink = String.format("mailto:%s?subject=%s&body=%s",
+            String gmailUrl = String.format(
+                    "https://mail.google.com/mail/?view=cm&fs=1&to=%s&su=%s&body=%s",
                     URLEncoder.encode(para, StandardCharsets.UTF_8),
                     URLEncoder.encode(assunto, StandardCharsets.UTF_8),
-                    URLEncoder.encode(corpo, StandardCharsets.UTF_8));
+                    URLEncoder.encode(corpo, StandardCharsets.UTF_8)
+            );
 
-            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.MAIL)) {
-                Desktop.getDesktop().mail(new URI(mailtoLink));
-            } else {
-                AlertUtils.getInstance().mostrarErro("Atenção", "Nenhum cliente de e-mail padrão foi encontrado.");
-            }
+            java.awt.Desktop.getDesktop().browse(new java.net.URI(gmailUrl));
+
         } catch (Exception e) {
-            AlertUtils.getInstance().mostrarErro("Erro", "Não foi possível abrir o cliente de e-mail.");
+            e.printStackTrace();
         }
     }
+
 }
